@@ -23,7 +23,7 @@ export interface HuggingFaceAMDResponse {
 export function getHuggingFaceConfig() {
   const config = {
     serviceUrl: process.env.PYTHON_ML_SERVICE_URL || "http://localhost:8000",
-    timeout: 30000,
+    timeout: 120000, // Increase timeout to 2 minutes for ML processing
   };
 
   console.log("HuggingFace config validation:", {
@@ -104,62 +104,6 @@ export class HuggingFaceAMDAnalyzer {
       // Return fallback response on error
       return {
         label: "machine", // Conservative fallback
-        confidence: 0.3,
-        raw_predictions: [0.7, 0.3],
-        model: "fallback",
-      };
-    }
-  }
-
-  // Analyze audio from URL (for recorded calls)
-  async analyzeAudioFromUrl(
-    audioUrl: string,
-    callLogId: string
-  ): Promise<HuggingFaceAMDResponse> {
-    const startTime = Date.now();
-
-    console.log("HuggingFace AMD analysis from URL:", {
-      callLogId,
-      audioUrl,
-    });
-
-    try {
-      const response = await fetch(`${this.config.serviceUrl}/predict_url`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ audio_url: audioUrl }),
-        signal: AbortSignal.timeout(this.config.timeout),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `ML service error: ${response.status} ${response.statusText} - ${errorText}`
-        );
-      }
-
-      const result: HuggingFaceAMDResponse = await response.json();
-      const latency = Date.now() - startTime;
-
-      console.log("HuggingFace AMD analysis from URL complete:", {
-        callLogId,
-        result: result.label,
-        confidence: result.confidence,
-        latencyMs: latency,
-        model: result.model,
-      });
-
-      return result;
-    } catch (error: any) {
-      console.error("HuggingFace AMD analysis from URL error:", {
-        callLogId,
-        error: error.message,
-      });
-
-      return {
-        label: "machine",
         confidence: 0.3,
         raw_predictions: [0.7, 0.3],
         model: "fallback",

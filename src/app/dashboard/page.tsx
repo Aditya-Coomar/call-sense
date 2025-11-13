@@ -178,12 +178,42 @@ export default function DashboardPage() {
             setCurrentCall(null);
             fetchCallLogs(); // Refresh call logs
 
-            if (data.result === "human") {
-              toast.success("Human detected! Call connected.");
-            } else if (data.result === "machine") {
-              toast("Voicemail detected. Call ended.", { icon: "ℹ️" });
-            } else {
-              toast("Detection inconclusive.", { icon: "⚠️" });
+            // Show appropriate toast based on final result
+            switch (data.result) {
+              case "human":
+                toast.success("Human detected! Call connected.");
+                break;
+              case "machine":
+                toast("Voicemail detected. Call ended.", { icon: "ℹ️" });
+                break;
+              case "undecided":
+                toast("Detection inconclusive.", { icon: "⚠️" });
+                break;
+              case "completed":
+                toast("Call completed successfully.", { icon: "✅" });
+                break;
+              case "error":
+                toast.error("Call failed with error.");
+                break;
+              case "no-answer":
+                toast("No answer received.", { icon: "📞" });
+                break;
+              case "busy":
+                toast("Line is busy.", { icon: "📵" });
+                break;
+              case "failed":
+                toast.error("Call failed to connect.");
+                break;
+              case "canceled":
+                toast("Call was canceled.", { icon: "⏹️" });
+                break;
+              default:
+                // Only show inconclusive for truly unknown results
+                if (data.result && !data.result.startsWith("unknown-")) {
+                  toast(`Call result: ${data.result}`, { icon: "ℹ️" });
+                } else {
+                  toast("Detection inconclusive.", { icon: "⚠️" });
+                }
             }
           }
         }

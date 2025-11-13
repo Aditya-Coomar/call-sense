@@ -95,14 +95,37 @@ async function processHuggingFaceRecording(
       "@/lib/integrations/huggingface"
     );
 
-    // Add authentication to recording URL
+    // Download recording with Twilio authentication
     const authenticatedUrl = `${recordingUrl}.wav`;
+    console.log("Downloading recording from:", authenticatedUrl);
 
-    // Analyze audio via ML service
-    const result = await huggingFaceAMDAnalyzer.analyzeAudioFromUrl(
-      authenticatedUrl,
-      callLogId
-    );
+    const accountSid = process.env.TWILIO_ACCOUNT_SID!;
+    const authToken = process.env.TWILIO_AUTH_TOKEN!;
+
+    const authHeader =
+      "Basic " + Buffer.from(`${accountSid}:${authToken}`).toString("base64");
+
+    const audioResponse = await fetch(authenticatedUrl, {
+      headers: {
+        Authorization: authHeader,
+      },
+    });
+
+    if (!audioResponse.ok) {
+      throw new Error(
+        `Failed to download recording: ${audioResponse.status} ${audioResponse.statusText}`
+      );
+    }
+
+    const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
+    console.log("Downloaded audio buffer:", audioBuffer.length, "bytes");
+
+    // Process audio with HuggingFace ML service
+    const result = await huggingFaceAMDAnalyzer.analyzeAudio({
+      audioData: audioBuffer,
+      format: "wav",
+      callLogId,
+    });
 
     console.log("HuggingFace analysis result:", result);
 
@@ -110,7 +133,7 @@ async function processHuggingFaceRecording(
     await prisma.callLog.update({
       where: { id: callLogId },
       data: {
-        result: result.label,
+        result: result.label, // HuggingFace returns 'label' field
         confidence: result.confidence,
         endedAt: new Date(),
       },
@@ -147,10 +170,21 @@ async function processGeminiRecording(recordingUrl: string, callLogId: string) {
     const authenticatedUrl = `${recordingUrl}.wav`;
     console.log("Downloading recording from:", authenticatedUrl);
 
-    const audioResponse = await fetch(authenticatedUrl);
+    const accountSid = process.env.TWILIO_ACCOUNT_SID!;
+    const authToken = process.env.TWILIO_AUTH_TOKEN!;
+
+    const authHeader =
+      "Basic " + Buffer.from(`${accountSid}:${authToken}`).toString("base64");
+
+    const audioResponse = await fetch(authenticatedUrl, {
+      headers: {
+        Authorization: authHeader,
+      },
+    });
+
     if (!audioResponse.ok) {
       throw new Error(
-        `Failed to download recording: ${audioResponse.statusText}`
+        `Failed to download recording: ${audioResponse.status} ${audioResponse.statusText}`
       );
     }
 

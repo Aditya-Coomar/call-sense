@@ -152,8 +152,13 @@ async function initiateTwilioNativeAMD(
     ],
     machineDetection: "Enable",
     machineDetectionTimeout: 30,
-    timeout: 20, // Ring for 20 seconds before timing out
+    machineDetectionSpeechThreshold: 2400, // 2.4 seconds of speech
+    machineDetectionSpeechEndThreshold: 1200, // 1.2 seconds of silence
+    machineDetectionSilenceTimeout: 5000, // 5 seconds of silence
+    asyncAmd: "true", // Enable asynchronous AMD
+    timeout: 25, // Ring for 25 seconds before timing out
     record: false,
+    asyncAmdStatusCallback: `${callbackUrl}?strategy=twilio&callLogId=${callLogId}`,
   });
 }
 

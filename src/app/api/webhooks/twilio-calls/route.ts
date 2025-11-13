@@ -200,9 +200,26 @@ export async function POST(request: NextRequest) {
         break;
 
       case "completed":
-        // Call completed - keep existing result
+        // Call completed - finalize result if it's still in-progress
+        let finalResult = callLog.result;
+
+        // If still in-progress, check for AMD results or mark as completed
+        if (finalResult === "in-progress" || finalResult === "pending") {
+          if (amdStatus === "human") {
+            finalResult = "human";
+          } else if (
+            amdStatus === "machine_start" ||
+            amdStatus === "machine_end_beep" ||
+            amdStatus === "machine_end_other"
+          ) {
+            finalResult = "machine";
+          } else {
+            finalResult = "completed"; // No clear AMD result
+          }
+        }
+
         await updateCallLog(callLogId, {
-          result: callLog.result || "completed",
+          result: finalResult,
           endedAt: new Date(),
         });
         break;
