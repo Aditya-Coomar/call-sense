@@ -111,6 +111,13 @@ export async function POST(request: NextRequest) {
         });
         break;
 
+      case "ringing":
+        // Call is ringing
+        await updateCallLog(callLogId, {
+          result: "ringing",
+        });
+        break;
+
       case "answered":
         // Call was answered, process AMD result
         const result = await processAMDResult(
@@ -153,20 +160,60 @@ export async function POST(request: NextRequest) {
           }
         }
 
-      case "completed":
       case "busy":
-      case "no-answer":
-      case "failed":
-      case "canceled":
-        // Call ended
+        // Line is busy
         await updateCallLog(callLogId, {
-          result: callStatus === "completed" ? callLog.result : callStatus,
+          result: "busy",
+          endedAt: new Date(),
+        });
+        break;
+
+      case "no-answer":
+        // No one answered the call
+        await updateCallLog(callLogId, {
+          result: "no-answer",
+          endedAt: new Date(),
+        });
+        break;
+
+      case "failed":
+        // Call failed
+        await updateCallLog(callLogId, {
+          result: "failed",
+          endedAt: new Date(),
+        });
+        break;
+
+      case "canceled":
+        // Call was canceled
+        await updateCallLog(callLogId, {
+          result: "canceled",
+          endedAt: new Date(),
+        });
+        break;
+
+      case "in-progress":
+        // Call is in progress (answered and connected)
+        await updateCallLog(callLogId, {
+          result: "in-progress",
+        });
+        break;
+
+      case "completed":
+        // Call completed - keep existing result
+        await updateCallLog(callLogId, {
+          result: callLog.result || "completed",
           endedAt: new Date(),
         });
         break;
 
       default:
         console.log("Unhandled call status:", callStatus);
+        // Update with unknown status for debugging
+        await updateCallLog(callLogId, {
+          result: `unknown-${callStatus}`,
+          endedAt: new Date(),
+        });
     }
 
     // Return empty TwiML response

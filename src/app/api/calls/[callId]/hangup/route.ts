@@ -5,7 +5,7 @@ import { getTwilioClient } from "@/lib/integrations/twilio";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { callId: string } }
+  { params }: { params: Promise<{ callId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -16,7 +16,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const callId = params.callId;
+    const { callId } = await params;
 
     if (!callId) {
       return NextResponse.json(

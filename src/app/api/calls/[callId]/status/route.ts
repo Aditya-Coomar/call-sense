@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { callId: string } }
+  { params }: { params: Promise<{ callId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const callId = params.callId;
+    const { callId } = await params;
 
     if (!callId) {
       return NextResponse.json(
@@ -45,7 +45,10 @@ export async function GET(
         status = "Call initiated. Waiting for answer...";
         break;
       case "initiated":
-        status = "Dialing...";
+        status = "Call initiated. Connecting to carrier...";
+        break;
+      case "ringing":
+        status = "Phone is ringing. Waiting for answer...";
         break;
       case "human":
         status = "Human detected! Call connected.";
@@ -60,19 +63,33 @@ export async function GET(
         completed = true;
         break;
       case "no-answer":
-        status = "No answer received.";
+        status = "No answer received. Call timed out.";
         completed = true;
         break;
       case "busy":
-        status = "Line busy.";
+        status = "Line is busy. Try again later.";
         completed = true;
         break;
       case "failed":
-        status = "Call failed.";
+        status = "Call failed to connect.";
         completed = true;
         break;
       case "canceled":
-        status = "Call canceled.";
+        status = "Call was canceled.";
+        completed = true;
+        break;
+      case "completed":
+        status = "Call completed successfully.";
+        completed = true;
+        break;
+      case "in-progress":
+        status = "Call is in progress. Audio analysis running...";
+        break;
+      case "answered":
+        status = "Call answered. Running AMD analysis...";
+        break;
+      case "no-speech":
+        status = "No speech detected. Call ended.";
         completed = true;
         break;
       case "error":
@@ -80,7 +97,16 @@ export async function GET(
         completed = true;
         break;
       default:
-        status = "Processing...";
+        // Handle unknown statuses (for debugging)
+        if (callLog.result?.startsWith("unknown-")) {
+          status = `Unknown call status: ${callLog.result.replace(
+            "unknown-",
+            ""
+          )}`;
+          completed = true;
+        } else {
+          status = "Processing call...";
+        }
     }
 
     return NextResponse.json({
