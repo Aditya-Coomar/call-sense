@@ -54,6 +54,7 @@ export default function LoginPage() {
       await signIn.social({
         provider: "google",
       });
+      router.push("/dashboard");
     } catch (error: any) {
       toast.error(error.message || "Google sign-in failed");
     }

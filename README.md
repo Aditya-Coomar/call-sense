@@ -2,6 +2,12 @@
 
 🚀 **A secure, scalable web application built with Next.js 14+ that implements multiple AMD strategies for intelligent outbound calling with real-time AI/ML analysis.**
 
+## 🎥 Demo Video
+
+[![CallSense Demo - Advanced Answering Machine Detection (AMD) System](https://img.shields.io/badge/▶️%20Watch%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.loom.com/share/aea10780b01f4071affb1275ba223c9c)
+
+> **📹 See CallSense in Action**: Watch our comprehensive demo showcasing real-time call analysis based on different amd strategies, call logs and analytics dashboard.
+
 ## 📋 Table of Contents
 
 - [Overview](#overview)
