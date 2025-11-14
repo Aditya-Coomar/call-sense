@@ -357,13 +357,6 @@ setInterval(pollStatus, 2000); // Balanced frequency
 onnx_model = torch.onnx.export(model, dummy_input, "model.onnx")
 ```
 
-#### **Redis Caching** (Production)
-
-```typescript
-// Cache frequent AMD results for similar audio patterns
-const cachedResult = await redis.get(audioHash);
-```
-
 #### **Batch Processing** (Scale)
 
 ```typescript
